@@ -4,9 +4,11 @@ DEPS= ../../Makefile.include Makefile
 
 # lib name, version
 LIBNAME=Python
-VERSION=3.7.3
+VERSION=3.7.4
 SOURCE=$(LIBNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.xz
+CWD=$(shell pwd)
+HOSTPYTHONDIR=$(CWD)/$(PLATFORM)/hostpython
 
 CONFIGURE=./configure --prefix=$(NATIVEPREFIX) --disable-shared --disable-framework --without-ensurepip --without-pymalloc --with-system-ffi
 ifeq ($(TARGET_PLATFORM),wayland)
@@ -29,10 +31,12 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 	cd $(PLATFORM); $(CONFIGURE)
 
 $(LIBDYLIB): $(PLATFORM)
+	cd $(PLATFORM); $(MAKE) regen-grammar
 	cd $(PLATFORM); $(MAKE)
 
 .installed-$(PLATFORM): $(LIBDYLIB)
 	cd $(PLATFORM); $(MAKE) install
+	install $(PLATFORM)/Parser/pgen $(NATIVEPREFIX)/bin
 	touch $(LIBDYLIB)
 	touch $@
 
